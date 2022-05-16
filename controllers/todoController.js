@@ -4,13 +4,8 @@ const createError = require("../utils/createError");
 exports.createTodo = async (req, res, next) => {
   try {
     const { userId, title, completed, dueDate } = req.body;
-    // findUser
-    const user = await User.findByPk(userId);
-    if (!user) {
-      createError("user not found", 404);
-    }
     const todo = await Todo.create({ title, completed, dueDate, userId });
-    res.status(201).json(todo);
+    res.status(201).json({todo,message: "todo created successfully"});
   } catch (error) {
     next(error);
   }
@@ -24,11 +19,14 @@ exports.updateTodo = async (req, res, next) => {
     if (!todo) {
       createError("todo not found", 404);
     }
-    await Todo.update(
+   const result = await Todo.update(
       { title, completed, dueDate },
       { where: { id: todoId, userId: userId } }
     );
-    res.status(200).json({
+    if (result[0] === 0) {
+      createError("Todo with this id is not found", 400);
+    }
+    res.status(201).json({
       message: "todo updated successfully",
       updatedTodo: { ...todo.dataValues, title, completed, dueDate },
     });
@@ -41,12 +39,12 @@ exports.updateTodo = async (req, res, next) => {
 exports.deleteTodo = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const todo = await Todo.findByPk(id);
-    if (!todo) {
-      createError("todo not found", 404);
+    const { userId } = req.body; //destructure
+    const result = await Todo.destroy({ where: { id: id, userId: userId } }); //เอามา row เดียว
+    if (result === 0) {
+      createError("todo is not found", 400);
     }
-    await todo.destroy({ where: { id } });
-    res.status(200).json({ message: "todo deleted successfully" });
+    res.status(204).json({ message: "todo deleted successfully" });
   } catch (error) {
     next(error);
   }

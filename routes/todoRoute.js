@@ -1,11 +1,11 @@
 const express = require("express");
+const UserMiddleware = require("../middlewares/user");
 const todoController = require("../controllers/todoController");
-const { route } = require("./userRoute");
 const router = express.Router();
 
-router.post("/", todoController.createTodo);
-router.patch("/", todoController.updateTodo);
-router.delete("/:id", todoController.deleteTodo);
-router.get("/", todoController.getAllTodo);
-router.get("/:id", todoController.getTodoById);
+router.post("/",UserMiddleware.findUser, todoController.createTodo);
+router.patch("/",UserMiddleware.findUser, todoController.updateTodo);
+router.delete("/:id",UserMiddleware.findUser, todoController.deleteTodo);
+router.get("/",UserMiddleware.findUser, todoController.getAllTodo);
+router.get("/:id",UserMiddleware.findUser, todoController.getTodoById);
 module.exports = router;
