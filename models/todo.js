@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         name: "userId",
       },
-      onDelete: "RESTRICT",
+      onDelete: "CASCADE",
     });
   };
   console.log("####", typeof Todo);
