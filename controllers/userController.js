@@ -36,7 +36,7 @@ exports.updateUser = async (req, res, next) => {
 
     const { email, oldPassword, newPassword, confirmNewPassword, birthDate } =
       req.body;
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    const isMatch = await bcrypt.compare(oldPassword, req.user.password);
     if (!isMatch) {
       createError("invalid password", 400);
     }
@@ -47,7 +47,7 @@ exports.updateUser = async (req, res, next) => {
     //   createError("user not found", 404);
     // }
     
-    if (oldPassword !== user.password) {
+    if (oldPassword !== req.user.password) {
       createError("old password is not correct", 400);
     }
 
