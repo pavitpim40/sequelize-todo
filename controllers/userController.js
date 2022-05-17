@@ -33,15 +33,20 @@ exports.register = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
+
     const { email, oldPassword, newPassword, confirmNewPassword, birthDate } =
       req.body;
-    const user = await User.findOne({ where: { id } });
-
-    if (!user) {
-      createError("user not found", 404);
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      createError("invalid password", 400);
     }
+    // อยู่ใน UserAuthMiddleWare แล้ว
+    // const user = await User.findOne({ where: { id:req.user.id } });
 
+    // if (!user) {
+    //   createError("user not found", 404);
+    // }
+    
     if (oldPassword !== user.password) {
       createError("old password is not correct", 400);
     }
@@ -58,7 +63,7 @@ exports.updateUser = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const result = await User.update(
       { email, password: hashedPassword, birthDate },
-      { where: { id: user.id } }
+      { where: { id: req.user.id } }
     );
     res.status(200).json({ message: "user updated successfully", result });
   } catch (error) {
