@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const { Todo, User } = require("../models");
 const createError = require("../utils/createError");
 // ## CREATE TODO
@@ -5,7 +6,7 @@ exports.createTodo = async (req, res, next) => {
   try {
     const { userId, title, completed, dueDate } = req.body;
     const todo = await Todo.create({ title, completed, dueDate, userId });
-    res.status(201).json({todo,message: "todo created successfully"});
+    res.status(201).json({ todo, message: "todo created successfully" });
   } catch (error) {
     next(error);
   }
@@ -19,7 +20,7 @@ exports.updateTodo = async (req, res, next) => {
     if (!todo) {
       createError("todo not found", 404);
     }
-   const result = await Todo.update(
+    const result = await Todo.update(
       { title, completed, dueDate },
       { where: { id: todoId, userId: userId } }
     );
@@ -53,8 +54,28 @@ exports.deleteTodo = async (req, res, next) => {
 // ## GET ALL TODO
 exports.getAllTodo = async (req, res, next) => {
   try {
-    const { userId } = req.body;
-    console.log(userId);
+    // extract header
+    const { authorization } = req.headers;
+    if (!authorization || !authorization.startsWith("Bearer")) {
+      createError("you are unauthorized", 401);
+    }
+    const [, token] = authorization.split(" ");
+    if (!token) {
+      createError("you are unauthorized", 401);
+    }
+
+    // decode token
+    const SECRET_KEY = "YOUR SECRET MESSAGE";
+    const decoded = jwt.verify(token, SECRET_KEY);
+    console.log(decoded);
+
+    // use token after decode
+    const { id: userId } = decoded;
+    const user = await User.findByPk(userId);
+    if (!user) {
+      createError("user not found", 400);
+    }
+
     const todos = await Todo.findAll({ where: { userId: userId } });
     if (todos.length === 0) {
       createError("todo not found", 404);
