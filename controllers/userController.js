@@ -47,9 +47,7 @@ exports.updateUser = async (req, res, next) => {
     //   createError("user not found", 404);
     // }
     
-    if (oldPassword !== req.user.password) {
-      createError("old password is not correct", 400);
-    }
+  
 
     if (newPassword !== confirmNewPassword) {
       createError("new passwords do not match", 400);
@@ -60,9 +58,10 @@ exports.updateUser = async (req, res, next) => {
     if (newPassword.length < 6) {
       createError("new password must be at least 6 characters", 400);
     }
+    
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const result = await User.update(
-      { email, password: hashedPassword, birthDate },
+      { email, password: hashedPassword, birthDate,lastUpdatedPassword:new Date() },
       { where: { id: req.user.id } }
     );
     res.status(200).json({ message: "user updated successfully", result });
