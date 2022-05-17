@@ -4,8 +4,8 @@ const createError = require("../utils/createError");
 // ## CREATE TODO
 exports.createTodo = async (req, res, next) => {
   try {
-    const { userId, title, completed, dueDate } = req.body;
-    const todo = await Todo.create({ title, completed, dueDate, userId });
+    const { title, completed, dueDate } = req.body;
+    const todo = await Todo.create({ title, completed, dueDate, userId:req.user.id });
     res.status(201).json({ todo, message: "todo created successfully" });
   } catch (error) {
     next(error);
@@ -15,21 +15,22 @@ exports.createTodo = async (req, res, next) => {
 // ## UPDATE TODO
 exports.updateTodo = async (req, res, next) => {
   try {
-    const { userId, todoId, title, completed, dueDate } = req.body;
-    const todo = await Todo.findOne({ where: { id: todoId, userId: userId } });
+    const { todoId, title, completed, dueDate } = req.body;
+    const todo = await Todo.findOne({ where: { id: todoId, userId: req.user.id } });
     if (!todo) {
       createError("todo not found", 404);
     }
     const result = await Todo.update(
       { title, completed, dueDate },
-      { where: { id: todoId, userId: userId } }
+      { where: { id: todoId, userId: req.user.id } }
     );
+    console.log(result, { id: todoId, userId: req.user.id })
     if (result[0] === 0) {
       createError("Todo with this id is not found", 400);
     }
     res.status(201).json({
       message: "todo updated successfully",
-      updatedTodo: { ...todo.dataValues, title, completed, dueDate },
+      updatedTodo: { ...result.dataValues, title, completed, dueDate },
     });
   } catch (error) {
     next(error);
@@ -40,8 +41,7 @@ exports.updateTodo = async (req, res, next) => {
 exports.deleteTodo = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body; //destructure
-    const result = await Todo.destroy({ where: { id: id, userId: userId } }); //เอามา row เดียว
+    const result = await Todo.destroy({ where: { id: id, userId: req.user.id } }); //เอามา row เดียว
     if (result === 0) {
       createError("todo is not found", 400);
     }
@@ -54,29 +54,13 @@ exports.deleteTodo = async (req, res, next) => {
 // ## GET ALL TODO
 exports.getAllTodo = async (req, res, next) => {
   try {
-    // extract header
-    const { authorization } = req.headers;
-    if (!authorization || !authorization.startsWith("Bearer")) {
-      createError("you are unauthorized", 401);
-    }
-    const [, token] = authorization.split(" ");
-    if (!token) {
-      createError("you are unauthorized", 401);
-    }
 
-    // decode token
-    const SECRET_KEY = "YOUR SECRET MESSAGE";
-    const decoded = jwt.verify(token, SECRET_KEY);
-    console.log(decoded);
-
-    // use token after decode
-    const { id: userId } = decoded;
-    const user = await User.findByPk(userId);
+    const user = await User.findByPk(req.user.id);
     if (!user) {
       createError("user not found", 400);
     }
 
-    const todos = await Todo.findAll({ where: { userId: userId } });
+    const todos = await Todo.findAll({ where: { userId: req.user.id } });
     if (todos.length === 0) {
       createError("todo not found", 404);
     }
@@ -91,9 +75,8 @@ exports.getAllTodo = async (req, res, next) => {
 exports.getTodoById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
     const todo = await Todo.findOne({
-      where: { id, userId: userId },
+      where: { id, userId: req.user.id },
       attribute: ["id", "title", "completed", "dueDate"],
     });
     if (!todo) {

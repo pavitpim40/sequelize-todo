@@ -7,6 +7,7 @@ const userRoute = require("./routes/userRoute");
 const todoRoute = require("./routes/todoRoute");
 const notFoundMiddleWare = require("./middlewares/notFound");
 const errorMiddleWare = require("./middlewares/error");
+const UserMiddleware = require("./middlewares/userAuthorize");
 const { sequelize } = require("./models");
 
 // ## MIDDLEWARE
@@ -17,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ## ROUTES
 app.use("/api/users", userRoute);
-app.use("/api/todo", todoRoute);
+app.use("/api/todo", UserMiddleware.getUserByToken,todoRoute);
 
 // ## NOTFOUND & ERROR
 app.use(notFoundMiddleWare);
