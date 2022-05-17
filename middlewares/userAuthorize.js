@@ -12,7 +12,7 @@ exports.getUserByToken = async (req, res, next) => {
     if (!token) {
       createError("you are unauthorized", 401);
     }
-    const SECRET_KEY = "YOUR SECRET MESSAGE";
+    const SECRET_KEY = process.env.JWT_SECRET_KEY || "1QAZ2WSX3EDC";
     const decoded = jwt.verify(token, SECRET_KEY);
     const user = await User.findOne({ where: { id: decoded.id } });
     if (!user) {
