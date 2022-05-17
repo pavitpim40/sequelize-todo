@@ -10,6 +10,7 @@ const todoRoute = require("./routes/todoRoute");
 const notFoundMiddleWare = require("./middlewares/notFound");
 const errorMiddleWare = require("./middlewares/error");
 const UserMiddleware = require("./middlewares/userAuthorize");
+const passportJWT = require("./middlewares/passportJwt");
 const { sequelize } = require("./models");
 
 // ## MIDDLEWARE
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // ## ROUTES
 app.use("/api/users", userRoute);
-app.use("/api/todo", UserMiddleware.getUserByToken,todoRoute);
+app.use("/api/todo", passportJWT,todoRoute);
 
 // ## NOTFOUND & ERROR
 app.use(notFoundMiddleWare);
